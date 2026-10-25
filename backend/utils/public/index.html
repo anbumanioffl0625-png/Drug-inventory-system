@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Drug Inventory &amp; Supply Chain Tracking App</title>
+<style>
+  :root {
+    --teal-dark: #024b52;
+    --teal: #028090;
+    --teal-mid: #05a3a4;
+    --teal-light: #e6f6f5;
+    --accent: #00a896;
+    --danger: #c0392b;
+    --danger-light: #fdecea;
+    --warn: #b8860b;
+    --warn-light: #fff7e0;
+    --ok: #1f8a56;
+    --ok-light: #e7f7ee;
+    --bg: #f4f7f7;
+    --surface: #ffffff;
+    --border: #e2e8e8;
+    --text: #17282a;
+    --text-muted: #5f7375;
+    --sidebar-bg: #062f33;
+    --sidebar-text: #cfe8e6;
+    --sidebar-active: #024b52;
+    --radius: 10px;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1a1b;
+      --surface: #16292b;
+      --border: #23393b;
+      --text: #e7f2f1;
+      --text-muted: #9db3b3;
+      --teal-light: #10302f;
+      --danger-light: #3a1f1d;
+      --warn-light: #362c12;
+      --ok-light: #123324;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1a1b;
+    --surface: #16292b;
+    --border: #23393b;
+    --text: #e7f2f1;
+    --text-muted: #9db3b3;
+    --teal-light: #10302f;
+    --danger-light: #3a1f1d;
+    --warn-light: #362c12;
+    --ok-light: #123324;
+  }
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+
+  /* ---------- Login screen ---------- */
+  #login-screen {
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .login-card {
+    width: 100%;
+    max-width: 400px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 32px;
+    box-shadow: 0 10px 40px rgba(2,75,82,0.10);
+  }
+  .login-logo {
+    width: 52px; height: 52px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--teal), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 18px;
+  }
+  .login-logo svg { width: 28px; height: 28px; }
+  .login-card h1 {
+    font-size: 21px;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .login-card p.sub {
+    color: var(--text-muted);
+    font-size: 13.5px;
+    margin: 0 0 24px;
+  }
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .field input, .field select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--teal-mid);
+    box-shadow: 0 0 0 3px rgba(2,128,144,0.15);
+  }
+  .role-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .role-btn {
+    padding: 10px 6px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+  }
+  .role-btn.active {
+    border-color: var(--teal);
+    background: var(--teal-light);
+    color: var(--teal-dark);
+  }
+  .btn-primary {
+    width: 100%;
+    padding: 11px;
+    border-radius: 8px;
+    border: none;
+    background: var(--teal-dark);
+    color: white;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary:hover { background: var(--teal); }
+  .login-hint {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  /* ---------- App shell ---------- */
+  #app-screen { display: none; min-height: 100%; }
+  .shell {
+    display: flex;
+    min-height: 100%;
+  }
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    padding: 18px 12px;
+    padding-top: calc(18px + env(safe-area-inset-top, 0px));
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px 20px;
+  }
+  .brand .mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--teal-mid), var(--accent));
+    flex-shrink: 0;
+  }
+  .brand .name {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: #fff;
+  }
+  .brand .name span { display:block; font-weight: 400; font-size: 10.5px; color: var(--sidebar-text); opacity: .8;}
+  nav.navlist { display: flex; flex-direction: column; gap: 3px; margin-top: 6px;}
+  .navlink {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    color: var(--sidebar-text);
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    background: none;
+    text-align: left;
+    width: 100%;
+  }
+  .navlink:hover { background: rgba(255,255,255,0.06); }
+  .navlink.active { background: var(--sidebar-active); color: #fff; }
+  .navlink .ic { width: 16px; text-align: center; opacity: .9; }
+  .sidebar-foot {
+    margin-top: auto;
+    padding: 10px;
+    font-size: 11.5px;
+    color: var(--sidebar-text);
+    opacity: .75;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 14px;
+  }
+  .sidebar-foot .who { color: #fff; font-weight: 600; font-size: 12.5px; margin-bottom: 2px;}
+  .logout-btn {
+    margin-top: 10px;
+    width: 100%;
+    padding: 8px;
+    border-radius: 7px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: transparent;
+    color: #fff;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .logout-btn:hover { background: rgba(255,255,255,0.08); }
+
+  .main {
+    flex: 1;
+    min-width: 0;
+    padding: 26px 30px 60px;
+    padding-top: calc(26px + env(safe-area-inset-top, 0px));
+  }
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .page-head h2 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .page-head p { margin: 0; color: var(--text-muted); font-size: 13.5px; }
+
+  /* Cards / stats */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  @media (max-width: 900px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+  .stat-card .label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px;}
+  .stat-card .value { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+  .stat-card .value.warn { color: var(--warn); }
+  .stat-card .value.danger { color: var(--danger); }
+  .stat-card .value.ok { color: var(--ok); }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+  .panel h3 { margin: 0 0 14px; font-size: 15px; }
+
+  .chart-wrap { overflow-x: auto; }
+  #stockChart { display:block; }
+
+  /* Table */
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 640px; }
+  th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: .03em; color: var(--text-muted); font-weight: 700; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; }
+  .badge.ok { background: var(--ok-light); color: var(--ok); }
+  .badge.warn { background: var(--warn-light); color: var(--warn); }
+  .badge.danger { background: var(--danger-light); color: var(--danger); }
+  .badge.neutral { background: var(--teal-light); color: var(--teal-dark); }
+
+  .row-actions { display: flex; gap: 6px; }
+  .icon-btn {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 5px 9px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .icon-btn:hover { background: var(--bg); }
+  .icon-btn.danger { color: var(--danger); border-color: var(--danger-light); }
+
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+  .toolbar input, .toolbar select {
+    padding: 8px 10px; border-radius: 7px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text); font-size: 13px;
+  }
+  .btn {
+    padding: 8px 14px; border-radius: 7px; border: none; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .btn.primary { background: var(--teal-dark); color: #fff; }
+  .btn.primary:hover { background: var(--teal); }
+  .btn.ghost { background: transparent; color: var(--teal-dark); border: 1px solid var(--teal); }
+  .spacer { flex: 1; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(4,24,26,0.45);
+    align-items: center; justify-content: center; z-index: 50; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 14px; padding: 24px; width: 100%; max-width: 460px;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal h3 { margin: 0 0 16px; font-size: 16px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13.5px; }
+
+  .alert-item {
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 8px;
+    border: 1px solid var(--border); margin-bottom: 8px;
+  }
+  .alert-item .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .alert-item .dot.danger { background: var(--danger); }
+  .alert-item .dot.warn { background: var(--warn); }
+  .alert-item .body { flex: 1; }
+  .alert-item .title { font-size: 13.5px; font-weight: 600; }
+  .alert-item .desc { font-size: 12px; color: var(--text-muted); }
+
+  ::selection { background: var(--teal-light); }
+
+  @media (max-width: 760px) {
+    .shell { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: relative; flex-direction: row; align-items: center; padding: 12px 14px; overflow-x: auto; }
+    .brand { padding: 0; margin-right: 10px; }
+    .brand .name span { display: none; }
+    nav.navlist { flex-direction: row; margin-top: 0; }
+    .sidebar-foot { display: none; }
+    .main { padding: 18px 16px 40px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .stat-grid { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4z" fill="white" opacity="0.95"/>
+        <path d="M9 12l2 2 4-4" stroke="#028090" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h1>Drug Inventory &amp; Supply Chain Tracking</h1>
+    <p class="sub">Sign in to manage stock, batches, and shipments.</p>
+    <p id="loginError" style="display:none;color:#c0392b;font-size:12.5px;background:#fdecea;border-radius:7px;padding:8px 10px;margin:0 0 14px;"></p>
+
+    <div class="field">
+      <label for="loginName">Name</label>
+      <input id="loginName" type="text" placeholder="e.g. A. Anbumani" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label for="loginEmail">Email</label>
+      <input id="loginEmail" type="email" placeholder="e.g. admin@dital.demo" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label for="loginPassword">Password</label>
+      <input id="loginPassword" type="password" placeholder="min. 6 characters" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label>Role <span style="font-weight:400;color:var(--text-muted);">(used only when creating a new account)</span></label>
+      <div class="role-grid" id="roleGrid">
+        <button type="button" class="role-btn active" data-role="Admin">Admin</button>
+        <button type="button" class="role-btn" data-role="Pharmacist">Pharmacist</button>
+        <button type="button" class="role-btn" data-role="Distributor">Distributor</button>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="loginBtn">Sign in</button>
+    <p class="login-hint">Seeded demo logins (password: <code>password123</code>): admin@dital.demo · pharmacist@dital.demo · distributor@dital.demo.<br>Or enter a new email + password to auto-create an account.</p>
+  </div>
+</div>
+
+<!-- ============ APP SCREEN ============ -->
+<div id="app-screen">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="mark"></div>
+        <div class="name">Drug Inventory<span>Supply Chain Tracker</span></div>
+      </div>
+      <nav class="navlist" id="navlist">
+        <button class="navlink" data-page="dashboard"><span class="ic">&#9673;</span> Dashboard</button>
+        <button class="navlink" data-page="stock"><span class="ic">&#9636;</span> Stock &amp; Batches</button>
+        <button class="navlink" data-page="orders"><span class="ic">&#9993;</span> Orders</button>
+        <button class="navlink" data-page="alerts"><span class="ic">&#9888;</span> Alerts</button>
+        <button class="navlink" data-page="admin" id="adminNavLink"><span class="ic">&#9881;</span> Admin</button>
+      </nav>
+      <div class="sidebar-foot">
+        <div class="who" id="whoName">—</div>
+        <div id="whoRole">—</div>
+        <button class="logout-btn" id="logoutBtn">Log out</button>
+      </div>
+    </aside>
+
+    <main class="main">
+
+      <!-- DASHBOARD -->
+      <section class="page" id="page-dashboard">
+        <div class="page-head">
+          <div>
+            <h2>Dashboard</h2>
+            <p>Live overview of stock, alerts, and shipments.</p>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="label">Total Stock (units)</div><div class="value" id="statTotalStock">0</div></div>
+          <div class="stat-card"><div class="label">Low-Stock Alerts</div><div class="value danger" id="statLowStock">0</div></div>
+          <div class="stat-card"><div class="label">Near Expiry (30 days)</div><div class="value warn" id="statNearExpiry">0</div></div>
+          <div class="stat-card"><div class="label">Active Orders</div><div class="value ok" id="statActiveOrders">0</div></div>
+        </div>
+        <div class="panel">
+          <h3>Stock by Drug</h3>
+          <div class="chart-wrap"><canvas id="stockChart" height="220"></canvas></div>
+        </div>
+        <div class="panel">
+          <h3>Recent Alerts</h3>
+          <div id="dashAlertsList"></div>
+        </div>
+      </section>
+
+      <!-- STOCK & BATCHES -->
+      <section class="page" id="page-stock">
+        <div class="page-head">
+          <div>
+            <h2>Stock &amp; Batches</h2>
+            <p>Manage drug stock, batch numbers, and expiry dates.</p>
+          </div>
+        </div>
+        <div class="toolbar">
+          <input type="text" id="stockSearch" placeholder="Search by drug name, category or batch no...">
+          <select id="stockFilter">
+            <option value="all">All items</option>
+            <option value="low">Low stock only</option>
+            <option value="expiring">Near expiry only</option>
+          </select>
+          <button class="btn ghost" id="scanSearchBtn" type="button">Scan to search</button>
+          <div class="spacer"></div>
+          <button class="btn primary" id="addDrugBtn">+ Add Drug / Batch</button>
+        </div>
+        <div class="panel" style="padding:0;">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Drug</th><th>Category</th><th>Batch No.</th><th>Mfg / Exp Date</th>
+                  <th>Qty</th><th>Warehouse</th><th>Status</th><th></th>
+                </tr>
+              </thead>
+              <tbody id="stockTableBody"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="stockEmpty" style="display:none;">No matching stock records.</div>
+        </div>
+      </section>
+
+      <!-- ORDERS -->
+      <section class="page" id="page-orders">
+        <div class="page-head">
+          <div>
+            <h2>Orders &amp; Shipment Tracking</h2>
+            <p>Track dispatch and delivery of drug orders across the supply chain.</p>
+          </div>
+        </div>
+        <div class="toolbar">
+          <select id="orderFilter">
+            <option value="all">All statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Shipped">Shipped</option>
+            <option value="Delivered">Delivered</option>
+          </select>
+          <div class="spacer"></div>
+          <button class="btn primary" id="addOrderBtn">+ New Order</button>
+        </div>
+        <div class="panel" style="padding:0;">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th>Order ID</th><th>Drug</th><th>Party</th><th>Qty</th><th>Date</th><th>Status</th><th></th></tr>
+              </thead>
+              <tbody id="orderTableBody"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="orderEmpty" style="display:none;">No orders yet.</div>
+        </div>
+      </section>
+
+      <!-- ALERTS -->
+      <section class="page" id="page-alerts">
+        <div class="page-head">
+          <div>
+            <h2>Low-Stock &amp; Expiry Alerts</h2>
+            <p>Automatically generated from current stock levels and expiry dates.</p>
+          </div>
+        </div>
+        <div class="panel" id="mailPanel" style="display:none;">
+          <h3>E-mail alerts</h3>
+          <p id="mailStatus" style="margin:0 0 12px;color:var(--text-muted);font-size:13.5px;">Checking...</p>
+          <button class="btn primary" id="sendMailBtn" type="button">Send alert e-mail now</button>
+        </div>
+        <div class="panel">
+          <h3>Low Stock (below 20 units)</h3>
+          <div id="lowStockAlerts"></div>
+        </div>
+        <div class="panel">
+          <h3>Expiring within 30 Days</h3>
+          <div id="expiryAlerts"></div>
+        </div>
+      </section>
+
+      <!-- ADMIN -->
+      <section class="page" id="page-admin">
+        <div class="page-head">
+          <div>
+            <h2>Admin Panel</h2>
+            <p>Manage users and view system-wide reports.</p>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Users</h3>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Name</th><th>Role</th><th>Status</th></tr></thead>
+              <tbody id="adminUsersBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Reports Summary</h3>
+          <div class="stat-grid" style="margin-bottom:0;">
+            <div class="stat-card"><div class="label">Drug Records</div><div class="value" id="repDrugCount">0</div></div>
+            <div class="stat-card"><div class="label">Warehouses</div><div class="value" id="repWarehouseCount">0</div></div>
+            <div class="stat-card"><div class="label">Total Orders</div><div class="value" id="repOrderCount">0</div></div>
+            <div class="stat-card"><div class="label">Delivered</div><div class="value ok" id="repDelivered">0</div></div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal-overlay" id="drugModalOverlay">
+  <div class="modal">
+    <h3 id="drugModalTitle">Add Drug / Batch</h3>
+    <form id="drugForm">
+      <input type="hidden" id="drugId">
+      <div class="form-grid">
+        <div class="field full">
+          <button type="button" class="btn ghost" id="scanBatchBtn" style="width:100%;">Scan QR / barcode to fill this form</button>
+        </div>
+        <div class="field full">
+          <label>Drug Name</label>
+          <input required id="drugName" type="text" placeholder="e.g. Paracetamol 500mg">
+        </div>
+        <div class="field">
+          <label>Category</label>
+          <input required id="drugCategory" type="text" placeholder="e.g. Analgesic">
+        </div>
+        <div class="field">
+          <label>Manufacturer</label>
+          <input required id="drugManufacturer" type="text" placeholder="e.g. Cipla">
+        </div>
+        <div class="field">
+          <label>Batch No.</label>
+          <input required id="drugBatchNo" type="text" placeholder="e.g. B-2201">
+        </div>
+        <div class="field">
+          <label>Warehouse</label>
+          <input required id="drugWarehouse" type="text" placeholder="e.g. Chennai Central">
+        </div>
+        <div class="field">
+          <label>Mfg. Date</label>
+          <input required id="drugMfgDate" type="date">
+        </div>
+        <div class="field">
+          <label>Exp. Date</label>
+          <input required id="drugExpDate" type="date">
+        </div>
+        <div class="field full">
+          <label>Quantity in stock</label>
+          <input required id="drugQty" type="number" min="0" placeholder="e.g. 120">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" id="drugCancelBtn">Cancel</button>
+        <button type="submit" class="btn primary">Save Record</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="scanModalOverlay">
+  <div class="modal">
+    <h3>Scan QR / barcode</h3>
+    <p style="margin:0 0 10px;color:var(--text-muted);font-size:13px;">Point the camera at the code. Allow the camera when the browser asks.</p>
+    <div id="qrReader" style="width:100%;min-height:60px;"></div>
+    <div id="qrFileTmp" style="display:none;"></div>
+    <p id="scanMsg" style="margin:10px 0 0;font-size:13px;color:var(--danger);"></p>
+    <div class="field" style="margin-top:12px;">
+      <label for="scanFile">No camera? Choose a picture of the code instead</label>
+      <input id="scanFile" type="file" accept="image/*">
+    </div>
+    <div class="modal-actions"><button type="button" class="btn ghost" id="scanCloseBtn">Close</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="qrModalOverlay">
+  <div class="modal" style="text-align:center;">
+    <h3 id="qrTitle">QR code</h3>
+    <div id="qrBox" style="display:flex;justify-content:center;padding:14px;background:#fff;border-radius:8px;"></div>
+    <p id="qrText" style="font-size:11.5px;color:var(--text-muted);word-break:break-all;margin:10px 0 0;"></p>
+    <div class="modal-actions" style="justify-content:center;"><button type="button" class="btn ghost" id="qrCloseBtn">Close</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="orderModalOverlay">
+  <div class="modal">
+    <h3>New Order</h3>
+    <form id="orderForm">
+      <div class="form-grid">
+        <div class="field full">
+          <label>Drug</label>
+          <select required id="orderDrug"></select>
+        </div>
+        <div class="field">
+          <label>Party (Supplier / Distributor)</label>
+          <input required id="orderParty" type="text" placeholder="e.g. MedSupply Co.">
+        </div>
+        <div class="field">
+          <label>Quantity</label>
+          <input required id="orderQty" type="number" min="1" placeholder="e.g. 50">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" id="orderCancelBtn">Cancel</button>
+        <button type="submit" class="btn primary">Create Order</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- QR / barcode libraries (loaded from a CDN, so the computer needs internet) -->
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function() {
+  "use strict";
+
+  var LOW_STOCK_THRESHOLD = 20;
+  var EXPIRY_WINDOW_DAYS = 30;
+  var API_BASE = ""; // same-origin: server.js serves this file, so relative /api/... works
+
+  function todayPlus(days) {
+    var d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0,10);
+  }
+  function toDateInput(isoOrDate) {
+    // Mongo returns full ISO datetimes; date <input> needs YYYY-MM-DD
+    return String(isoOrDate).slice(0, 10);
+  }
+  function daysUntil(dateStr) {
+    var d = new Date(toDateInput(dateStr) + "T00:00:00");
+    var now = new Date();
+    now.setHours(0,0,0,0);
+    return Math.round((d - now) / 86400000);
+  }
+
+  var state = { drugs: [], orders: [] };
+  var session = { name: "", role: "Admin", token: null };
+
+  // ---------- API helper ----------
+  // Every call attaches the JWT (once logged in) and throws with the
+  // server's own message on failure, so callers can show it to the user.
+  async function api(path, options) {
+    options = options || {};
+    var headers = Object.assign({ "Content-Type": "application/json" }, options.headers || {});
+    if (session.token) headers["Authorization"] = "Bearer " + session.token;
+
+    var res = await fetch(API_BASE + path, Object.assign({}, options, { headers: headers }));
+    var data = null;
+    try { data = await res.json(); } catch (e) { /* no JSON body */ }
+    if (!res.ok) {
+      throw new Error((data && data.message) || ("Request failed (" + res.status + ")"));
+    }
+    return data;
+  }
+
+  async function fetchState() {
+    var drugs = await api("/api/drugs");
+    var orders = await api("/api/orders");
+    state.drugs = drugs.map(function(d) {
+      return {
+        id: d._id, name: d.name, category: d.category, manufacturer: d.manufacturer,
+        batchNo: d.batchNo, warehouse: d.warehouse,
+        mfgDate: toDateInput(d.mfgDate), expDate: toDateInput(d.expDate), qty: d.qty
+      };
+    });
+    state.orders = orders.map(function(o) {
+      return { id: o._id, drugName: o.drugName, party: o.party, qty: o.qty, status: o.status, date: toDateInput(o.date) };
+    });
+  }
+
+  // ---------- Login ----------
+  var roleGrid = document.getElementById("roleGrid");
+  roleGrid.addEventListener("click", function(e) {
+    var btn = e.target.closest(".role-btn");
+    if (!btn) return;
+    roleGrid.querySelectorAll(".role-btn").forEach(function(b){ b.classList.remove("active"); });
+    btn.classList.add("active");
+  });
+
+  function showLoginError(msg) {
+    var el = document.getElementById("loginError");
+    el.textContent = msg;
+    el.style.display = msg ? "block" : "none";
+  }
+
+  document.getElementById("loginBtn").addEventListener("click", async function() {
+    var btn = this;
+    var name = document.getElementById("loginName").value.trim();
+    var email = document.getElementById("loginEmail").value.trim();
+    var password = document.getElementById("loginPassword").value;
+    var activeRoleBtn = roleGrid.querySelector(".role-btn.active");
+    var role = activeRoleBtn ? activeRoleBtn.getAttribute("data-role") : "Admin";
+
+    showLoginError("");
+    if (!email || !password) { showLoginError("Email and password are required."); return; }
+
+    btn.disabled = true; btn.textContent = "Signing in...";
+    try {
+      var result;
+      try {
+        // Try logging in first
+        result = await api("/api/auth/login", {
+          method: "POST",
+          body: JSON.stringify({ email: email, password: password })
+        });
+      } catch (loginErr) {
+        // No account yet with this email → auto-create one (demo convenience)
+        result = await api("/api/auth/register", {
+          method: "POST",
+          body: JSON.stringify({ name: name || email.split("@")[0], email: email, password: password, role: role })
+        });
+      }
+
+      session.token = result.token;
+      session.name = result.user.name;
+      session.role = result.user.role;
+      session.email = result.user.email;
+      try { localStorage.setItem("dital_token", session.token); } catch (e) {}
+
+      await fetchState();
+
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("app-screen").style.display = "block";
+      document.getElementById("whoName").textContent = session.name;
+      document.getElementById("whoRole").textContent = session.role;
+      document.getElementById("adminNavLink").style.display = (session.role === "Admin") ? "flex" : "none";
+      goToPage(session.role === "Distributor" ? "orders" : "dashboard");
+      renderAll();
+    } catch (err) {
+      showLoginError(err.message || "Sign in failed. Is the backend server running?");
+    } finally {
+      btn.disabled = false; btn.textContent = "Sign in";
+    }
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", function() {
+    session.token = null;
+    try { localStorage.removeItem("dital_token"); } catch (e) {}
+    document.getElementById("app-screen").style.display = "none";
+    document.getElementById("login-screen").style.display = "flex";
+  });
+
+  // ---------- Navigation ----------
+  var navlist = document.getElementById("navlist");
+  navlist.addEventListener("click", function(e) {
+    var btn = e.target.closest(".navlink");
+    if (!btn) return;
+    goToPage(btn.getAttribute("data-page"));
+  });
+  function goToPage(pageId) {
+    document.querySelectorAll(".navlink").forEach(function(b) {
+      b.classList.toggle("active", b.getAttribute("data-page") === pageId);
+    });
+    document.querySelectorAll(".page").forEach(function(p) {
+      p.classList.toggle("active", p.id === "page-" + pageId);
+    });
+    if (pageId === "alerts") loadMailStatus();
+  }
+
+  // ---------- Derived data helpers ----------
+  function getLowStock() { return state.drugs.filter(function(d){ return d.qty < LOW_STOCK_THRESHOLD; }); }
+  function getNearExpiry() {
+    return state.drugs.filter(function(d){
+      var days = daysUntil(d.expDate);
+      return days <= EXPIRY_WINDOW_DAYS;
+    });
+  }
+
+  // ---------- Dashboard ----------
+  function renderDashboard() {
+    var totalStock = state.drugs.reduce(function(s,d){ return s + Number(d.qty || 0); }, 0);
+    var low = getLowStock();
+    var expiring = getNearExpiry();
+    var active = state.orders.filter(function(o){ return o.status !== "Delivered"; });
+
+    document.getElementById("statTotalStock").textContent = totalStock.toLocaleString();
+    document.getElementById("statLowStock").textContent = low.length;
+    document.getElementById("statNearExpiry").textContent = expiring.length;
+    document.getElementById("statActiveOrders").textContent = active.length;
+
+    drawChart();
+
+    var listEl = document.getElementById("dashAlertsList");
+    var items = [];
+    low.slice(0,3).forEach(function(d){
+      items.push({ level: "danger", title: d.name + " is low on stock", desc: d.qty + " units left at " + d.warehouse });
+    });
+    expiring.slice(0,3).forEach(function(d){
+      var days = daysUntil(d.expDate);
+      items.push({ level: "warn", title: d.name + " expiring soon", desc: (days <= 0 ? "Expired" : "Expires in " + days + " day(s)") + " · Batch " + d.batchNo });
+    });
+    if (!items.length) {
+      listEl.innerHTML = '<div class="empty-state">No active alerts. Everything looks healthy.</div>';
+    } else {
+      listEl.innerHTML = items.map(function(it){
+        return '<div class="alert-item"><span class="dot ' + it.level + '"></span>' +
+          '<div class="body"><div class="title">' + escapeHtml(it.title) + '</div>' +
+          '<div class="desc">' + escapeHtml(it.desc) + '</div></div></div>';
+      }).join("");
+    }
+  }
+
+  function drawChart() {
+    var canvas = document.getElementById("stockChart");
+    var wrap = canvas.parentElement;
+    var cssWidth = Math.max(wrap.clientWidth, 320);
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = cssWidth * dpr;
+    canvas.height = 220 * dpr;
+    canvas.style.width = cssWidth + "px";
+    canvas.style.height = "220px";
+    var ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssWidth, 220);
+
+    var data = state.drugs.map(function(d){ return { label: d.name, qty: Number(d.qty||0) }; });
+    if (!data.length) return;
+    var max = Math.max.apply(null, data.map(function(d){ return d.qty; })) || 1;
+    var padding = 34;
+    var chartW = cssWidth - padding*1.4;
+    var chartH = 220 - padding*1.7;
+    var barGap = 14;
+    var barW = Math.max(18, (chartW - barGap*(data.length-1)) / data.length);
+
+    var isDark = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() === '#0f1a1b';
+    ctx.strokeStyle = isDark ? "#23393b" : "#e2e8e8";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding*0.6, 10);
+    ctx.lineTo(padding*0.6, chartH + 12);
+    ctx.lineTo(chartW + padding*0.6, chartH + 12);
+    ctx.stroke();
+
+    data.forEach(function(d, i) {
+      var barH = (d.qty / max) * (chartH - 10);
+      var x = padding*0.6 + i * (barW + barGap) + barGap*0.3;
+      var y = chartH + 12 - barH;
+      var grad = ctx.createLinearGradient(0, y, 0, chartH+12);
+      grad.addColorStop(0, "#05a3a4");
+      grad.addColorStop(1, "#028090");
+      ctx.fillStyle = d.qty < LOW_STOCK_THRESHOLD ? "#c0392b" : grad;
+      roundRect(ctx, x, y, barW, barH, 4);
+      ctx.fill();
+      ctx.fillStyle = isDark ? "#9db3b3" : "#5f7375";
+      ctx.font = "10.5px -apple-system, sans-serif";
+      ctx.textAlign = "center";
+      var label = d.label.length > 11 ? d.label.slice(0,10) + "…" : d.label;
+      ctx.fillText(label, x + barW/2, chartH + 26);
+      ctx.fillStyle = isDark ? "#e7f2f1" : "#17282a";
+      ctx.font = "bold 10.5px -apple-system, sans-serif";
+      ctx.fillText(String(d.qty), x + barW/2, Math.max(y - 6, 12));
+    });
+  }
+  function roundRect(ctx, x, y, w, h, r) {
+    if (h < 0) { y += h; h = Math.abs(h); }
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+  }
+
+  // ---------- Stock table ----------
+  function statusBadge(d) {
+    var days = daysUntil(d.expDate);
+    if (days <= 0) return '<span class="badge danger">Expired</span>';
+    if (days <= EXPIRY_WINDOW_DAYS) return '<span class="badge warn">Near Expiry</span>';
+    if (d.qty < LOW_STOCK_THRESHOLD) return '<span class="badge danger">Low Stock</span>';
+    return '<span class="badge ok">Healthy</span>';
+  }
+  function renderStockTable() {
+    var q = document.getElementById("stockSearch").value.trim().toLowerCase();
+    var filter = document.getElementById("stockFilter").value;
+    var rows = state.drugs.filter(function(d) {
+      var matchesQ = !q || d.name.toLowerCase().indexOf(q) > -1 || d.category.toLowerCase().indexOf(q) > -1 || String(d.batchNo).toLowerCase().indexOf(q) > -1;
+      var matchesFilter = true;
+      if (filter === "low") matchesFilter = d.qty < LOW_STOCK_THRESHOLD;
+      if (filter === "expiring") matchesFilter = daysUntil(d.expDate) <= EXPIRY_WINDOW_DAYS;
+      return matchesQ && matchesFilter;
+    });
+    var body = document.getElementById("stockTableBody");
+    var canEdit = session.role === "Admin" || session.role === "Pharmacist";
+    document.getElementById("stockEmpty").style.display = rows.length ? "none" : "block";
+    body.innerHTML = rows.map(function(d) {
+      return '<tr>' +
+        '<td><strong>' + escapeHtml(d.name) + '</strong><br><span style="color:var(--text-muted);font-size:12px;">' + escapeHtml(d.manufacturer) + '</span></td>' +
+        '<td>' + escapeHtml(d.category) + '</td>' +
+        '<td>' + escapeHtml(d.batchNo) + '</td>' +
+        '<td style="font-size:12.5px;">' + d.mfgDate + '<br>' + d.expDate + '</td>' +
+        '<td>' + d.qty + '</td>' +
+        '<td>' + escapeHtml(d.warehouse) + '</td>' +
+        '<td>' + statusBadge(d) + '</td>' +
+        '<td><div class="row-actions">' +
+          '<button class="icon-btn" data-qr="' + d.id + '">QR</button>' +
+          (canEdit ? '<button class="icon-btn" data-edit="' + d.id + '">Edit</button><button class="icon-btn danger" data-del="' + d.id + '">Del</button>' : '') +
+        '</div></td>' +
+      '</tr>';
+    }).join("");
+  }
+
+  document.getElementById("stockSearch").addEventListener("input", renderStockTable);
+  document.getElementById("stockFilter").addEventListener("change", renderStockTable);
+
+  document.getElementById("stockTableBody").addEventListener("click", async function(e) {
+    var editId = e.target.getAttribute("data-edit");
+    var delId = e.target.getAttribute("data-del");
+    var qrId = e.target.getAttribute("data-qr");
+    if (qrId) showQr(qrId);
+    if (editId) openDrugModal(editId);
+    if (delId) {
+      if (!confirm("Delete this drug record?")) return;
+      try {
+        await api("/api/drugs/" + delId, { method: "DELETE" });
+        await fetchState();
+        renderAll();
+      } catch (err) { alert(err.message); }
+    }
+  });
+
+  // ---------- Drug modal ----------
+  var drugModal = document.getElementById("drugModalOverlay");
+  document.getElementById("addDrugBtn").addEventListener("click", function(){ openDrugModal(null); });
+  document.getElementById("drugCancelBtn").addEventListener("click", closeDrugModal);
+  drugModal.addEventListener("click", function(e){ if (e.target === drugModal) closeDrugModal(); });
+
+  function openDrugModal(id) {
+    var d = id ? state.drugs.find(function(x){ return x.id === id; }) : null;
+    document.getElementById("drugModalTitle").textContent = d ? "Edit Drug / Batch" : "Add Drug / Batch";
+    document.getElementById("drugId").value = d ? d.id : "";
+    document.getElementById("drugName").value = d ? d.name : "";
+    document.getElementById("drugCategory").value = d ? d.category : "";
+    document.getElementById("drugManufacturer").value = d ? d.manufacturer : "";
+    document.getElementById("drugBatchNo").value = d ? d.batchNo : "";
+    document.getElementById("drugWarehouse").value = d ? d.warehouse : "";
+    document.getElementById("drugMfgDate").value = d ? d.mfgDate : todayPlus(0);
+    document.getElementById("drugExpDate").value = d ? d.expDate : todayPlus(180);
+    document.getElementById("drugQty").value = d ? d.qty : "";
+    drugModal.classList.add("show");
+  }
+  function closeDrugModal() { drugModal.classList.remove("show"); }
+
+  document.getElementById("drugForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    var id = document.getElementById("drugId").value;
+    var record = {
+      name: document.getElementById("drugName").value.trim(),
+      category: document.getElementById("drugCategory").value.trim(),
+      manufacturer: document.getElementById("drugManufacturer").value.trim(),
+      batchNo: document.getElementById("drugBatchNo").value.trim(),
+      warehouse: document.getElementById("drugWarehouse").value.trim(),
+      mfgDate: document.getElementById("drugMfgDate").value,
+      expDate: document.getElementById("drugExpDate").value,
+      qty: Number(document.getElementById("drugQty").value || 0)
+    };
+    var saveBtn = this.querySelector('button[type="submit"]');
+    saveBtn.disabled = true;
+    try {
+      if (id) {
+        await api("/api/drugs/" + id, { method: "PUT", body: JSON.stringify(record) });
+      } else {
+        await api("/api/drugs", { method: "POST", body: JSON.stringify(record) });
+      }
+      await fetchState();
+      closeDrugModal();
+      renderAll();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+
+  // ---------- Orders ----------
+  function renderOrdersTable() {
+    var filter = document.getElementById("orderFilter").value;
+    var rows = state.orders.filter(function(o){ return filter === "all" || o.status === filter; });
+    var body = document.getElementById("orderTableBody");
+    document.getElementById("orderEmpty").style.display = rows.length ? "none" : "block";
+    body.innerHTML = rows.map(function(o) {
+      var badgeClass = o.status === "Delivered" ? "ok" : (o.status === "Shipped" ? "neutral" : "warn");
+      var nextStatus = o.status === "Pending" ? "Shipped" : (o.status === "Shipped" ? "Delivered" : null);
+      return '<tr>' +
+        '<td>' + o.id + '</td>' +
+        '<td>' + escapeHtml(o.drugName) + '</td>' +
+        '<td>' + escapeHtml(o.party) + '</td>' +
+        '<td>' + o.qty + '</td>' +
+        '<td>' + o.date + '</td>' +
+        '<td><span class="badge ' + badgeClass + '">' + o.status + '</span></td>' +
+        '<td>' + (nextStatus ? '<button class="icon-btn" data-advance="' + o.id + '">Mark ' + nextStatus + '</button>' : '') + '</td>' +
+      '</tr>';
+    }).join("");
+  }
+  document.getElementById("orderFilter").addEventListener("change", renderOrdersTable);
+  document.getElementById("orderTableBody").addEventListener("click", async function(e) {
+    var id = e.target.getAttribute("data-advance");
+    if (!id) return;
+    var o = state.orders.find(function(x){ return x.id === id; });
+    if (!o) return;
+    var nextStatus = o.status === "Pending" ? "Shipped" : "Delivered";
+    try {
+      await api("/api/orders/" + id + "/status", { method: "PUT", body: JSON.stringify({ status: nextStatus }) });
+      await fetchState();
+      renderAll();
+    } catch (err) { alert(err.message); }
+  });
+
+  var orderModal = document.getElementById("orderModalOverlay");
+  document.getElementById("addOrderBtn").addEventListener("click", function() {
+    var sel = document.getElementById("orderDrug");
+    sel.innerHTML = state.drugs.map(function(d){ return '<option value="' + escapeAttr(d.name) + '">' + escapeHtml(d.name) + '</option>'; }).join("");
+    document.getElementById("orderParty").value = "";
+    document.getElementById("orderQty").value = "";
+    orderModal.classList.add("show");
+  });
+  document.getElementById("orderCancelBtn").addEventListener("click", function(){ orderModal.classList.remove("show"); });
+  orderModal.addEventListener("click", function(e){ if (e.target === orderModal) orderModal.classList.remove("show"); });
+  document.getElementById("orderForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    var record = {
+      drugName: document.getElementById("orderDrug").value,
+      party: document.getElementById("orderParty").value.trim(),
+      qty: Number(document.getElementById("orderQty").value || 0)
+    };
+    try {
+      await api("/api/orders", { method: "POST", body: JSON.stringify(record) });
+      await fetchState();
+      orderModal.classList.remove("show");
+      renderAll();
+    } catch (err) { alert(err.message); }
+  });
+
+  // ---------- Alerts page ----------
+  function renderAlertsPage() {
+    var low = getLowStock();
+    var expiring = getNearExpiry();
+    var lowEl = document.getElementById("lowStockAlerts");
+    var expEl = document.getElementById("expiryAlerts");
+    lowEl.innerHTML = low.length ? low.map(function(d){
+      return '<div class="alert-item"><span class="dot danger"></span><div class="body">' +
+        '<div class="title">' + escapeHtml(d.name) + '</div>' +
+        '<div class="desc">Only ' + d.qty + ' units at ' + escapeHtml(d.warehouse) + ' · Batch ' + escapeHtml(d.batchNo) + '</div></div></div>';
+    }).join("") : '<div class="empty-state">No low-stock items.</div>';
+
+    expEl.innerHTML = expiring.length ? expiring.map(function(d){
+      var days = daysUntil(d.expDate);
+      return '<div class="alert-item"><span class="dot warn"></span><div class="body">' +
+        '<div class="title">' + escapeHtml(d.name) + '</div>' +
+        '<div class="desc">' + (days <= 0 ? "Expired" : days + " day(s) left") + ' · Batch ' + escapeHtml(d.batchNo) + ' · ' + escapeHtml(d.warehouse) + '</div></div></div>';
+    }).join("") : '<div class="empty-state">Nothing expiring soon.</div>';
+  }
+
+  // ---------- Admin page ----------
+  async function renderAdminPage() {
+    var body = document.getElementById("adminUsersBody");
+    if (session.role === "Admin") {
+      try {
+        var users = await api("/api/auth/users");
+        body.innerHTML = users.map(function(u){
+          var status = (u.email === (session.email || "")) ? "Signed in now" : "Active";
+          return '<tr><td>' + escapeHtml(u.name) + ' <span style="color:var(--text-muted);font-size:12px;">(' + escapeHtml(u.email) + ')</span></td><td>' + escapeHtml(u.role) + '</td>' +
+            '<td><span class="badge ok">Active</span></td></tr>';
+        }).join("");
+      } catch (err) {
+        body.innerHTML = '<tr><td colspan="3" style="color:var(--danger);">' + escapeHtml(err.message) + '</td></tr>';
+      }
+    } else {
+      body.innerHTML = '<tr><td colspan="3" style="color:var(--text-muted);">Sign in as Admin to view registered users.</td></tr>';
+    }
+
+    document.getElementById("repDrugCount").textContent = state.drugs.length;
+    var warehouses = new Set(state.drugs.map(function(d){ return d.warehouse; }));
+    document.getElementById("repWarehouseCount").textContent = warehouses.size;
+    document.getElementById("repOrderCount").textContent = state.orders.length;
+    document.getElementById("repDelivered").textContent = state.orders.filter(function(o){ return o.status === "Delivered"; }).length;
+  }
+
+  // ---------- Utilities ----------
+  function escapeHtml(str) {
+    return String(str == null ? "" : str).replace(/[&<>"']/g, function(c) {
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+    });
+  }
+  function escapeAttr(str) { return escapeHtml(str); }
+
+  function renderAll() {
+    renderDashboard();
+    renderStockTable();
+    renderOrdersTable();
+    renderAlertsPage();
+    renderAdminPage();
+  }
+
+  window.addEventListener("resize", function() {
+    if (document.getElementById("page-dashboard").classList.contains("active")) drawChart();
+  });
+
+  // ---------- QR / barcode: scan to fill the form, scan to search, show a QR for a drug ----------
+  var scanner = null, scanHandler = null;
+
+  // A scanned text can be JSON, "name|category|manufacturer|batchNo|mfgDate|expDate|qty|warehouse", or just a batch number
+  function parseScan(text) {
+    text = String(text || "").trim();
+    try {
+      var obj = JSON.parse(text);
+      if (obj && typeof obj === "object") return obj;
+    } catch (e) { /* not JSON */ }
+    if (text.indexOf("|") > -1) {
+      var order = ["name", "category", "manufacturer", "batchNo", "mfgDate", "expDate", "qty", "warehouse"];
+      var out = {};
+      text.split("|").forEach(function(part, i) {
+        part = part.trim();
+        if (order[i] && part) out[order[i]] = part;
+      });
+      return out;
+    }
+    return { batchNo: text };
+  }
+
+  function drugToQrText(d) {
+    return [d.name, d.category, d.manufacturer, d.batchNo, d.mfgDate, d.expDate, d.qty, d.warehouse].join("|");
+  }
+
+  function setScanMsg(msg) { document.getElementById("scanMsg").textContent = msg || ""; }
+
+  function closeScan() {
+    var s = scanner;
+    scanner = null;
+    document.getElementById("scanModalOverlay").classList.remove("show");
+    if (s) {
+      try {
+        var p = s.stop();
+        if (p && p.then) p.then(function() { s.clear(); }).catch(function() {});
+      } catch (e) { /* camera was not running */ }
+    }
+  }
+
+  function handleScanned(text) {
+    var cb = scanHandler;
+    closeScan();
+    if (cb) cb(text);
+  }
+
+  function openScanner(onText) {
+    scanHandler = onText;
+    setScanMsg("");
+    document.getElementById("scanFile").value = "";
+    document.getElementById("scanModalOverlay").classList.add("show");
+    if (typeof Html5Qrcode === "undefined") {
+      setScanMsg("The scanner library could not load. Check the internet connection and refresh the page.");
+      return;
+    }
+    scanner = new Html5Qrcode("qrReader");
+    scanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 240, height: 240 } },
+      function(text) { handleScanned(text); },
+      function() { /* frames without a code are ignored */ }
+    ).catch(function(err) {
+      setScanMsg("The camera could not start (" + (err && err.message ? err.message : err) + "). Use the picture option below.");
+    });
+  }
+
+  document.getElementById("scanCloseBtn").addEventListener("click", closeScan);
+  document.getElementById("scanFile").addEventListener("change", function() {
+    var file = this.files && this.files[0];
+    if (!file) return;
+    if (typeof Html5Qrcode === "undefined") { setScanMsg("The scanner library could not load. Check the internet connection."); return; }
+    var reader = new Html5Qrcode("qrFileTmp");
+    reader.scanFile(file, false)
+      .then(function(text) { try { reader.clear(); } catch (e) {} handleScanned(text); })
+      .catch(function() { setScanMsg("No QR code or barcode was found in that picture."); });
+  });
+
+  function fillFormFromScan(text) {
+    var o = parseScan(text);
+    var map = { name: "drugName", category: "drugCategory", manufacturer: "drugManufacturer", batchNo: "drugBatchNo",
+                warehouse: "drugWarehouse", mfgDate: "drugMfgDate", expDate: "drugExpDate", qty: "drugQty" };
+    Object.keys(map).forEach(function(key) {
+      if (o[key] == null || o[key] === "") return;
+      var value = String(o[key]);
+      if (key === "mfgDate" || key === "expDate") value = value.slice(0, 10);
+      document.getElementById(map[key]).value = value;
+    });
+  }
+
+  document.getElementById("scanBatchBtn").addEventListener("click", function() { openScanner(fillFormFromScan); });
+  document.getElementById("scanSearchBtn").addEventListener("click", function() {
+    openScanner(function(text) {
+      var o = parseScan(text);
+      document.getElementById("stockSearch").value = o.batchNo || o.name || String(text);
+      document.getElementById("stockFilter").value = "all";
+      renderStockTable();
+    });
+  });
+
+  function showQr(id) {
+    var d = state.drugs.find(function(x) { return x.id === id; });
+    if (!d) return;
+    var text = drugToQrText(d);
+    document.getElementById("qrTitle").textContent = d.name + " - Batch " + d.batchNo;
+    var box = document.getElementById("qrBox");
+    box.innerHTML = "";
+    if (typeof QRCode === "undefined") {
+      box.textContent = "The QR library could not load. Check the internet connection.";
+    } else {
+      new QRCode(box, { text: text, width: 240, height: 240, correctLevel: QRCode.CorrectLevel.L });
+    }
+    document.getElementById("qrText").textContent = text;
+    document.getElementById("qrModalOverlay").classList.add("show");
+  }
+  document.getElementById("qrCloseBtn").addEventListener("click", function() {
+    document.getElementById("qrModalOverlay").classList.remove("show");
+  });
+
+  // ---------- E-mail alerts (Alerts page) ----------
+  async function loadMailStatus() {
+    var panel = document.getElementById("mailPanel");
+    if (session.role === "Distributor") { panel.style.display = "none"; return; }
+    panel.style.display = "block";
+    var el = document.getElementById("mailStatus");
+    var btn = document.getElementById("sendMailBtn");
+    try {
+      var st = await api("/api/alerts/status");
+      if (st.configured) {
+        el.textContent = "E-mail alerts are ON (" + (st.mode === "brevo" ? "Brevo" : "Gmail") + ", " + st.recipients +
+          " recipient(s)). A summary is also sent every day, and when a saved drug is low on stock or near expiry.";
+        btn.disabled = false;
+      } else {
+        el.textContent = "E-mail is not set up on the server yet. Add the e-mail settings to the .env file (see README) and restart the server.";
+        btn.disabled = true;
+      }
+    } catch (err) {
+      el.textContent = err.message;
+      btn.disabled = true;
+    }
+  }
+
+  document.getElementById("sendMailBtn").addEventListener("click", async function() {
+    var btn = this;
+    var el = document.getElementById("mailStatus");
+    btn.disabled = true;
+    btn.textContent = "Sending...";
+    try {
+      var r = await api("/api/alerts/send", { method: "POST" });
+      el.textContent = r.message;
+    } catch (err) {
+      el.textContent = "Could not send the e-mail: " + err.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Send alert e-mail now";
+    }
+  });
+
+  // ---------- Auto sign-in on refresh (if a token is already saved) ----------
+  (async function tryAutoLogin() {
+    var saved = null;
+    try { saved = localStorage.getItem("dital_token"); } catch (e) {}
+    if (!saved) return;
+    session.token = saved;
+    try {
+      var meRes = await api("/api/auth/me");
+      session.name = meRes.user.name;
+      session.role = meRes.user.role;
+      session.email = meRes.user.email;
+      await fetchState();
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("app-screen").style.display = "block";
+      document.getElementById("whoName").textContent = session.name;
+      document.getElementById("whoRole").textContent = session.role;
+      document.getElementById("adminNavLink").style.display = (session.role === "Admin") ? "flex" : "none";
+      goToPage(session.role === "Distributor" ? "orders" : "dashboard");
+      renderAll();
+    } catch (err) {
+      // saved token is invalid/expired — fall back to the login screen
+      session.token = null;
+      try { localStorage.removeItem("dital_token"); } catch (e) {}
+    }
+  })();
+})();
+</script>
+</body>
+</html>
